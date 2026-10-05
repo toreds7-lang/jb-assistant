@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Todoro</title>
+  <link rel="icon" href="/totoro.jpg">
+  <link rel="stylesheet" href="/app.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <img src="/totoro.jpg" alt="">
+      <div>
+        <h1>Todoro</h1>
+        <span>your personal assistant · powered by Claude Code</span>
+      </div>
+    </div>
+    <div class="topstats" id="topstats"></div>
+    <button id="btnQuit" class="ghost small" title="Stop the Todoro server">Quit</button>
+  </header>
+
+  <main class="layout">
+    <!-- LEFT: projects + skills -->
+    <aside class="col left">
+      <section class="panel">
+        <div class="panel-head">
+          <h2>Projects</h2>
+          <div class="head-actions">
+            <button id="btnBrowse" class="small">Browse</button>
+            <button id="btnAdd" class="small primary">+ Add</button>
+          </div>
+        </div>
+        <form id="addForm" class="inline-form hidden">
+          <input id="addPath" placeholder="D:\2026_Agent\my_project" spellcheck="false">
+          <button class="small primary">Add</button>
+        </form>
+        <div id="projectList" class="project-list"></div>
+      </section>
+
+      <section class="panel grow">
+        <div class="panel-head">
+          <h2>Skills <span class="count" id="skillCount"></span></h2>
+          <select id="skillScope" class="small">
+            <option value="">All</option>
+            <option value="global">Global</option>
+            <option value="project">Project</option>
+            <option value="plugin">Plugin</option>
+            <option value="synced">Anthropic</option>
+          </select>
+        </div>
+        <input id="skillFilter" class="search" placeholder="Filter skills…" spellcheck="false">
+        <div id="skillList" class="skill-list"></div>
+      </section>
+    </aside>
+
+    <!-- CENTER: assistant / top 10 / harness -->
+    <section class="col center">
+      <nav class="tabs" id="tabs">
+        <button data-tab="chat" class="active">Assistant</button>
+        <button data-tab="top10">Top 10 <span id="recDot" class="dot-badge hidden"></span></button>
+        <button data-tab="harness">Harness</button>
+      </nav>
+
+      <div class="tab-body" id="tab-chat">
+        <div class="toolbar">
+          <label>Project <select id="chatProject"></select></label>
+          <label>Model
+            <select id="chatModel">
+              <option value="">Default</option>
+              <option value="opus">Opus</option>
+              <option value="sonnet">Sonnet</option>
+              <option value="fable">Fable</option>
+              <option value="haiku">Haiku</option>
+            </select>
+          </label>
+          <label>Effort
+            <select id="chatEffort">
+              <option value="">Default</option>
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+              <option value="xhigh">X-High</option>
+              <option value="max">Max</option>
+            </select>
+          </label>
+          <label>Permissions
+            <select id="chatPerm">
+              <option value="auto">Auto (safe actions)</option>
+              <option value="acceptEdits">Accept edits</option>
+              <option value="plan">Plan (read-only)</option>
+              <option value="bypassPermissions">Bypass all ⚠</option>
+            </select>
+          </label>
+          <span class="spacer"></span>
+          <span id="sessionBadge" class="badge hidden"></span>
+          <button id="btnTerminal" class="small" title="Continue this conversation in a full interactive Claude Code terminal">Open in terminal</button>
+          <button id="btnNewChat" class="small">New chat</button>
+        </div>
+
+        <div id="messages" class="messages"></div>
+
+        <form id="composer" class="composer">
+          <div class="composer-top">
+            <span id="skillChip" class="skill-chip hidden"></span>
+            <span class="hint">Enter to send · Shift+Enter for a new line</span>
+          </div>
+          <div class="composer-row">
+            <textarea id="prompt" rows="3" placeholder="Ask Claude about this project…"></textarea>
+            <button id="btnSend" class="primary big" type="submit">Send</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="tab-body hidden" id="tab-top10">
+        <div class="top10-head">
+          <div>
+            <h2>Top 10 for you</h2>
+            <p id="recMeta" class="muted"></p>
+          </div>
+          <div class="rec-controls">
+            <select id="recHistory" class="small" title="Earlier runs"></select>
+            <select id="recModel" class="small" title="Model for the research run">
+              <option value="sonnet">Sonnet</option>
+              <option value="opus">Opus</option>
+              <option value="fable">Fable</option>
+              <option value="haiku">Haiku</option>
+            </select>
+            <select id="recEffort" class="small" title="Effort">
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+              <option value="xhigh">X-High</option>
+            </select>
+            <label class="switch"><input type="checkbox" id="recAuto"> Auto daily</label>
+            <button id="btnRec" class="primary">Refresh now</button>
+          </div>
+        </div>
+
+        <div class="keywords">
+          <div class="kw-head"><h3>Your keywords</h3><span class="muted">Todoro also reviews every project in your list.</span></div>
+          <div id="kwList" class="chips"></div>
+          <form id="kwForm" class="inline-form">
+            <input id="kwInput" placeholder="Add a keyword, e.g. voice cloning" spellcheck="false">
+            <button class="small">Add</button>
+          </form>
+        </div>
+
+        <div id="recProgress" class="progress hidden"></div>
+        <div id="recError" class="warn-box hidden"></div>
+        <p id="recSummary" class="summary hidden"></p>
+        <div id="recGrid" class="rec-grid"></div>
+      </div>
+
+      <div class="tab-body hidden" id="tab-harness">
+        <div class="toolbar">
+          <label>Project <select id="harnessProject"></select></label>
+          <span class="spacer"></span>
+          <button id="btnHarnessRefresh" class="small">Refresh</button>
+        </div>
+        <div id="harness" class="harness"></div>
+      </div>
+    </section>
+
+    <!-- RIGHT: chronological timeline -->
+    <aside class="col right">
+      <section class="panel grow">
+        <div class="panel-head">
+          <h2>Timeline</h2>
+          <div class="head-actions">
+            <select id="tlDays" class="small">
+              <option value="1">24 hours</option>
+              <option value="3">3 days</option>
+              <option value="7" selected>7 days</option>
+              <option value="30">30 days</option>
+            </select>
+            <button id="tlRefresh" class="small icon-btn" title="Refresh">↻</button>
+          </div>
+        </div>
+        <div id="tlFilters" class="chips filters"></div>
+        <select id="tlProject" class="small full"></select>
+        <div id="timeline" class="timeline"></div>
+      </section>
+    </aside>
+  </main>
+
+  <div id="modal" class="modal hidden">
+    <div class="modal-card">
+      <div class="modal-head"><h3 id="modalTitle"></h3><button class="icon-btn" id="modalClose" title="Close">✕</button></div>
+      <div id="modalBody"></div>
+    </div>
+  </div>
+  <div id="toast" class="toast"></div>
+
+  <script type="module" src="/app.js"></script>
+</body>
+</html>
